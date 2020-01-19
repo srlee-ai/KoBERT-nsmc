@@ -98,7 +98,7 @@ class Trainer(object):
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.args.max_grad_norm)
 
                     # optimizer.step()
-                    xm.optimizer_step(optimizer)
+                    xm.optimizer_step(optimizer, barrier=True)
                     scheduler.step()  # Update learning rate schedule
                     self.model.zero_grad()
                     global_step += 1
