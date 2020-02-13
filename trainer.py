@@ -186,7 +186,9 @@ class Trainer(object):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         model_to_save = self.model.module if hasattr(self.model, 'module') else self.model
-        model_to_save.save_pretrained(output_dir)
+
+        # Move model from tpu to cpu
+        model_to_save.cpu().save_pretrained(output_dir)
         torch.save(self.args, os.path.join(output_dir, 'training_config.bin'))
         logger.info("Saving model checkpoint to %s", output_dir)
 
