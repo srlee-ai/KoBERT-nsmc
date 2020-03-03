@@ -1,6 +1,8 @@
 import argparse
+import json
 
 from trainer import Trainer
+from predict import Predict
 from utils import init_logger, load_tokenizer, MODEL_CLASSES, MODEL_PATH_MAP
 from data_loader import load_and_cache_examples
 
@@ -8,17 +10,27 @@ from data_loader import load_and_cache_examples
 def main(args):
     init_logger()
     tokenizer = load_tokenizer(args)
-    train_dataset = load_and_cache_examples(args, tokenizer, mode="train")
+    train_dataset = None if args.do_predict else load_and_cache_examples(args, tokenizer, mode="train")
     dev_dataset = None
-    test_dataset = load_and_cache_examples(args, tokenizer, mode="test")
-    trainer = Trainer(args, train_dataset, dev_dataset, test_dataset)
+    test_dataset = None if args.do_predict else load_and_cache_examples(args, tokenizer, mode="test")
 
     if args.do_train:
+        trainer = Trainer(args, train_dataset, dev_dataset, test_dataset)
         trainer.train()
 
     if args.do_eval:
+        trainer = Trainer(args, train_dataset, dev_dataset, test_dataset)
         trainer.load_model()
         trainer.evaluate("test")
+
+    if args.do_predict:
+        predict = Predict(args, tokenizer)
+        predict.load_model()
+
+        sentences = [args.sentence]
+        result_json = dict()
+        result_json['result'] = int(predict.predict(sentences))
+        print(json.dumps(result_json, ensure_ascii=False))
 
 
 if __name__ == '__main__':
@@ -29,6 +41,7 @@ if __name__ == '__main__':
     parser.add_argument("--data_dir", default="./data", type=str, help="The input data dir")
     parser.add_argument("--train_file", default="ratings_train.txt", type=str, help="Train file")
     parser.add_argument("--test_file", default="ratings_test.txt", type=str, help="Test file")
+    parser.add_argument("--sentence", default="연기는 별로지만 재미 하나는 끝내줌!", type=str, help="predict sentence")
 
     parser.add_argument("--model_type", default="kobert", type=str, help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
 
@@ -51,6 +64,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--do_train", action="store_true", help="Whether to run training.")
     parser.add_argument("--do_eval", action="store_true", help="Whether to run eval on the test set.")
+    parser.add_argument("--do_predict", action="store_true", help="Whether to run predict senctence.")
     parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
 
     args = parser.parse_args()

@@ -36,7 +36,7 @@ def load_tokenizer(args):
 def init_logger():
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S',
-                        level=logging.INFO)
+                        level=logging.CRITICAL)
 
 
 def set_seed(args):
